@@ -1,0 +1,477 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Django Music Player</title>
+    {% load static %}
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/css/bootstrap.min.css" rel="stylesheet">
+
+    <link rel="stylesheet" href="{% static 'css/style.css' %}">
+    <style>
+        :root {
+    --primary-color: #6c5ce7;
+    --secondary-color: #fd79a8;
+    --accent-color: #00cec9;
+    --bg-color: #2d3436;
+    --text-color: #f5f6fa;
+    --sidebar-bg: #1e272e;
+    --card-bg: rgba(255, 255, 255, 0.05);
+}
+
+body {
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+    background: var(--bg-color);
+    color: var(--text-color);
+    overflow-x: hidden;
+}
+
+/* Sidebar Styles */
+.sidebar {
+    background: var(--sidebar-bg);
+    padding: 0;
+    height: 100vh;
+    position: sticky;
+    top: 0;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.3);
+}
+
+.sidebar-content {
+    padding: 2rem 1.5rem;
+}
+
+.logo {
+    color: "black";
+    font-weight: 700;
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+    text-align: center;
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+    text-shadow: 0 0 10px rgba(108, 92, 231, 0.3);
+}
+
+.logo span {
+    color: var(--accent-color);
+}
+
+.folder-selector {
+    background: var(--card-bg);
+    padding: 1.5rem;
+    border-radius: 10px;
+    margin-bottom: 1.5rem;
+}
+
+.folder-selector h4 {
+    margin-bottom: 1rem;
+    color: var(--accent-color);
+}
+
+#folderPath {
+    background: rgba(255, 255, 255, 0.1);
+    border: none;
+    color: var(--text-color);
+}
+
+.playlist-container {
+    background: var(--card-bg);
+    padding: 1.5rem;
+    border-radius: 10px;
+    height: 60vh;
+    overflow-y: auto;
+}
+
+.playlist-container h4 {
+    margin-bottom: 1rem;
+    color: var(--accent-color);
+}
+
+#playlist {
+    background: transparent;
+    max-height: calc(100% - 3rem);
+    overflow-y: auto;
+}
+
+#playlist .list-group-item {
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-color);
+    border: none;
+    margin-bottom: 0.5rem;
+    border-radius: 5px;
+    transition: all 0.3s ease;
+    cursor: pointer;
+}
+
+#playlist .list-group-item:hover {
+    background: rgba(255, 255, 255, 0.1);
+    transform: translateX(5px);
+}
+
+#playlist .active {
+    background: var(--primary-color) !important;
+    color: white;
+}
+
+.placeholder-text {
+    text-align: center;
+    font-style: italic;
+    color: rgba(255, 255, 255, 0.5);
+}
+
+/* Main Content Styles */
+.main-content {
+    padding: 2rem;
+}
+
+.current-song-info {
+    margin-bottom: 2rem;
+}
+
+.album-art {
+    width: 200px;
+    height: 200px;
+    margin: 0 auto 1.5rem;
+    border-radius: 50%;
+    overflow: hidden;
+    box-shadow: 0 0 30px rgba(108, 92, 231, 0.5);
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    animation: pulse 3s infinite alternate;
+}
+
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+        box-shadow: 0 0 20px rgba(108, 92, 231, 0.5);
+    }
+    100% {
+        transform: scale(1.05);
+        box-shadow: 0 0 40px rgba(108, 92, 231, 0.8);
+    }
+}
+
+.album-art-placeholder {
+    width: 150px;
+    height: 150px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+.current-song-info h2 {
+    font-size: 1.8rem;
+    margin-bottom: 0.5rem;
+    font-weight: 700;
+}
+
+.current-song-info p {
+    font-size: 1.2rem;
+    color: rgba(255, 255, 255, 0.7);
+}
+
+/* Player Controls */
+.player-controls {
+    background: var(--card-bg);
+    padding: 1.5rem;
+    border-radius: 15px;
+    margin-bottom: 2rem;
+}
+
+.progress-container {
+    display: flex;
+    align-items: center;
+    margin-bottom: 1.5rem;
+}
+
+.progress {
+    flex-grow: 1;
+    height: 6px;
+    margin: 0 1rem;
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.progress-bar {
+    background: linear-gradient(90deg, var(--primary-color), var(--secondary-color));
+    border-radius: 6px;
+    transition: width 0.1s linear;
+}
+
+.control-buttons {
+    display: flex;
+    justify-content: center;
+    margin-bottom: 1.5rem;
+}
+
+.btn-control {
+    width: 60px;
+    height: 60px;
+    border-radius: 50%;
+    background: rgba(255, 255, 255, 0.05);
+    color: var(--text-color);
+    margin: 0 0.7rem;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.3s ease;
+    border: none;
+}
+
+.btn-control:hover:not(:disabled) {
+    background: rgba(255, 255, 255, 0.2);
+    transform: scale(1.1);
+}
+
+.btn-control:disabled {
+    opacity: 0.5;
+    cursor: not-allowed;
+}
+
+.btn-play {
+    width: 70px;
+    height: 70px;
+    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
+}
+
+.btn-play:hover:not(:disabled) {
+    background: linear-gradient(45deg, var(--secondary-color), var(--primary-color));
+}
+
+.volume-container {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.volume-container svg {
+    margin-right: 1rem;
+}
+
+.form-range {
+    width: 200px;
+}
+
+.form-range::-webkit-slider-thumb {
+    background: var(--primary-color);
+}
+
+.form-range::-moz-range-thumb {
+    background: var(--primary-color);
+}
+
+/* Visualizer */
+.visualizer-container {
+    background: var(--card-bg);
+    border-radius: 15px;
+    height: 150px;
+    margin-bottom: 2rem;
+    padding: 1rem;
+    overflow: hidden;
+    position: relative;
+}
+
+#visualizer {
+    width: 100%;
+    height: 100%;
+}
+
+/* Features Section */
+.features-section {
+    padding: 1rem 0;
+}
+
+.features-section h3 {
+    margin-bottom: 1.5rem;
+    text-align: center;
+    color: var(--accent-color);
+}
+
+.feature-card {
+    background: var(--card-bg);
+    padding: 1.5rem;
+    border-radius: 15px;
+    text-align: center;
+    height: 100%;
+    transition: all 0.3s ease;
+}
+
+.feature-card:hover {
+    transform: translateY(-10px);
+    box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+}
+
+.feature-card svg {
+    margin-bottom: 1rem;
+    color: var(--accent-color);
+}
+
+.feature-card h4 {
+    margin-bottom: 1rem;
+    font-weight: 600;
+}
+
+.feature-card p {
+    color: rgba(255, 255, 255, 0.7);
+}
+
+/* Responsive Styles */
+@media (max-width: 768px) {
+    .sidebar {
+        height: auto;
+        position: relative;
+    }
+    
+    .playlist-container {
+        height: 300px;
+    }
+    
+    .album-art {
+        width: 150px;
+        height: 150px;
+    }
+    
+    .album-art-placeholder {
+        width: 120px;
+        height: 120px;
+    }
+    
+    .current-song-info h2 {
+        font-size: 1.5rem;
+    }
+    
+    .btn-control {
+        width: 50px;
+        height: 50px;
+        margin: 0 0.5rem;
+    }
+    
+    .btn-play {
+        width: 60px;
+        height: 60px;
+    }
+}
+        </style>
+</head>
+<body>
+    <div class="container-fluid">
+        <div class="row min-vh-100">
+            <!-- Sidebar -->
+            <div class="col-md-3 sidebar">
+                <div class="sidebar-content">
+                    <h1 class="logo">Melody Stream</h1>
+                    <div class="folder-selector mt-4">
+                        <h4>Select Folder</h4>
+                        <form id="folderForm" class="mt-3">
+                            {% csrf_token %}
+                            <input type="text" id="folderPath" class="form-control" placeholder="Enter folder path">
+                            <button type="submit" class="btn btn-primary mt-2">Load Songs</button>
+                        </form>
+                    </div>
+                    <div class="playlist-container mt-4">
+                        <h4>Playlist</h4>
+                        <ul id="playlist" class="list-group">
+                            <li class="list-group-item placeholder-text">No songs loaded</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Main Content -->
+            <div class="col-md-9 main-content">
+                <div class="current-song-info text-center">
+                    <div class="album-art">
+                        <div class="album-art-placeholder">
+                            <svg width="150" height="150" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M12 2C6.48 2 2 6.48 2 12C2 17.52 6.48 22 12 22C17.52 22 22 17.52 22 12C22 6.48 17.52 2 12 2ZM12 16.5C9.51 16.5 7.5 14.49 7.5 12C7.5 9.51 9.51 7.5 12 7.5C14.49 7.5 16.5 9.51 16.5 12C16.5 14.49 14.49 16.5 12 16.5ZM12 11C11.45 11 11 11.45 11 12C11 12.55 11.45 13 12 13C12.55 13 13 12.55 13 12C13 11.45 12.55 11 12 11Z" fill="currentColor"/>
+                            </svg>
+                        </div>
+                    </div>
+                    <h2 id="currentSongTitle">No song selected</h2>
+                    <p id="currentSongArtist">-</p>
+                </div>
+                
+                <div class="player-controls">
+                    <div class="progress-container">
+                        <span id="currentTime">0:00</span>
+                        <div class="progress">
+                            <div class="progress-bar" role="progressbar" style="width: 0%"></div>
+                        </div>
+                        <span id="totalTime">0:00</span>
+                    </div>
+                    <div class="control-buttons">
+                        <button id="prevBtn" class="btn btn-control" disabled>
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M6 6H8V18H6V6ZM9.5 12L18 18V6L9.5 12Z" fill="currentColor"/>
+                            </svg>
+                        </button>
+                        <button id="playBtn" class="btn btn-control btn-play" disabled>
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M8 5V19L19 12L8 5Z" fill="currentColor"/>
+                            </svg>
+                        </button>
+                        <button id="stopBtn" class="btn btn-control" disabled>
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M6 6H18V18H6V6Z" fill="currentColor"/>
+                            </svg>
+                        </button>
+                        <button id="nextBtn" class="btn btn-control" disabled>
+                            <svg width="24" height="24" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                <path d="M6 18L14.5 12L6 6V18ZM16 6V18H18V6H16Z" fill="currentColor"/>
+                            </svg>
+                        </button>
+                    </div>
+                    <div class="volume-container">
+                        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                            <path d="M3 9V15H7L12 20V4L7 9H3ZM16.5 12C16.5 10.23 15.48 8.71 14 7.97V16.02C15.48 15.29 16.5 13.77 16.5 12ZM14 3.23V5.29C16.89 6.15 19 8.83 19 12C19 15.17 16.89 17.85 14 18.71V20.77C18.01 19.86 21 16.28 21 12C21 7.72 18.01 4.14 14 3.23Z" fill="currentColor"/>
+                        </svg>
+                        <input type="range" class="form-range" id="volumeControl" min="0" max="1" step="0.01" value="0.7">
+                    </div>
+                </div>
+                
+                <div class="visualizer-container">
+                    <canvas id="visualizer"></canvas>
+                </div>
+                
+                <div class="features-section">
+                    <h3>Features</h3>
+                    <div class="row">
+                        <div class="col-md-4">
+                            <div class="feature-card">
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M10 4H4C2.9 4 2 4.9 2 6V18C2 19.1 2.9 20 4 20H10C11.1 20 12 19.1 12 18V6C12 4.9 11.1 4 10 4ZM10 18H4V6H10V18ZM20 4H14C12.9 4 12 4.9 12 6V18C12 19.1 12.9 20 14 20H20C21.1 20 22 19.1 22 18V6C22 4.9 21.1 4 20 4ZM20 18H14V6H20V18Z" fill="currentColor"/>
+                                </svg>
+                                <h4>Playlist Management</h4>
+                                <p>Load music from any folder on your computer with a simple folder selection.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="feature-card">
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M12 3V13.55C11.41 13.21 10.73 13 10 13C7.79 13 6 14.79 6 17C6 19.21 7.79 21 10 21C12.21 21 14 19.21 14 17V7H18V3H12ZM10 19C8.9 19 8 18.1 8 17C8 15.9 8.9 15 10 15C11.1 15 12 15.9 12 17C12 18.1 11.1 19 10 19Z" fill="currentColor"/>
+                                </svg>
+                                <h4>Music Controls</h4>
+                                <p>Play, pause, stop, and navigate through your music with intuitive controls.</p>
+                            </div>
+                        </div>
+                        <div class="col-md-4">
+                            <div class="feature-card">
+                                <svg width="48" height="48" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                                    <path d="M7 18H9V6H7V18ZM11 22H13V2H11V22ZM3 14H5V10H3V14ZM15 18H17V6H15V18ZM19 10V14H21V10H19Z" fill="currentColor"/>
+                                </svg>
+                                <h4>Audio Visualization</h4>
+                                <p>Watch your music come alive with dynamic audio visualization.</p>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <audio id="audioPlayer"></audio>
+    
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0-alpha1/dist/js/bootstrap.bundle.min.js"></script>
+    <script src="{% static 'js/player.js' %}"></script>
+</body>
+</html>
