@@ -30,12 +30,14 @@ body {
 }
 
 .logo {
+    margin-bottom: 1.5rem;
+    text-align: center;
+    text-shadow: 0 0 10px rgba(108, 92, 231, 0.3);
+    background: -webkit-linear-gradient(var(--primary-color), var(--secondary-color));
+    -webkit-text-fill-color: transparent;
+    -webkit-background-clip: text;
     font-weight: 700;
     font-size: 2rem;
-    margin-bottom: 1.5rem;
-    background: linear-gradient(45deg, var(--primary-color), var(--secondary-color));
-    -webkit-text-fill-color: transparent;
-    text-shadow: 0 0 10px rgba(108, 92, 231, 0.3);
 }
 
 .logo span {
